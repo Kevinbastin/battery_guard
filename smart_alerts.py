@@ -203,6 +203,8 @@ class SmartAlerts:
         Lazy imports plyer inside the method so it only loads into memory when an alert fires.
         Silenced during quiet hours (midnight–7am) if enabled.
         """
+        if not getattr(self, "popup_enabled", True):
+            return
         if self.quiet_hours_enabled:
             current_hour = datetime.datetime.now().hour
             if self.quiet_start_hour <= current_hour < self.quiet_end_hour:

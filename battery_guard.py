@@ -1335,6 +1335,7 @@ class BatteryGuardApp(ctk.CTk):
         self.smart_alerts.email_sender = self.config_data.get("email_sender", "")
         self.smart_alerts.email_password = self.config_data.get("email_password", "")
         self.smart_alerts.email_recipient = self.config_data.get("email_recipient", "")
+        self.smart_alerts.popup_enabled = False  # Prevent duplicate OS desktop popup when AlertPopup dialog is already shown in GUI mode
 
         # State
         self.battery_percent = 0
@@ -1783,7 +1784,6 @@ class BatteryGuardApp(ctk.CTk):
             except: pass
         self.alert_popup = AlertPopup(self, alert_type, self.battery_percent,
                                       on_snooze=self._on_snooze, on_dismiss=self._on_dismiss)
-        self.show_window()
 
     def _send_alert_telegram(self, alert_type):
         token = self.config_data.get("telegram_token", "")
