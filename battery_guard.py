@@ -63,6 +63,47 @@ def load_config():
     return DEFAULT_CONFIG.copy()
 
 
+def enable_universal_mousewheel(window):
+    """
+    Universally enables smooth, reliable mousewheel scrolling (<Button-4>, <Button-5>, and <MouseWheel>)
+    across all CTkScrollableFrame instances on Linux (X11 & Wayland), Windows, and macOS.
+    Never calls unbind_all when windows close, preventing global scrolling breakdowns.
+    """
+    def _on_global_mousewheel(event):
+        widget = event.widget
+        canvas = None
+        curr = widget
+        while curr is not None:
+            if isinstance(curr, tk.Canvas) and hasattr(curr, "yview_scroll"):
+                canvas = curr
+                break
+            curr = getattr(curr, "master", None)
+            
+        if canvas is None:
+            return
+
+        units = 0
+        if getattr(event, "num", 0) == 4:
+            units = -2
+        elif getattr(event, "num", 0) == 5:
+            units = 2
+        elif hasattr(event, "delta") and event.delta != 0:
+            if IS_LINUX:
+                units = -2 if event.delta > 0 else 2
+            else:
+                units = -1 if event.delta > 0 else 1
+
+        if units != 0:
+            try:
+                canvas.yview_scroll(units, "units")
+            except Exception:
+                pass
+
+    window.bind_all("<Button-4>", _on_global_mousewheel, add="+")
+    window.bind_all("<Button-5>", _on_global_mousewheel, add="+")
+    window.bind_all("<MouseWheel>", _on_global_mousewheel, add="+")
+
+
 def apply_hardware_charging_threshold(upper_limit):
     """
     Attempts to write the upper charging threshold directly to the Linux kernel sysfs interface.
@@ -638,9 +679,10 @@ class SetupWizard(ctk.CTkToplevel):
                      anchor="w", wraplength=400).pack(fill="x", pady=(4, 0))
 
         # Form card
-        card = ctk.CTkFrame(self, fg_color=C["bg_card"], corner_radius=10,
-                            border_width=1, border_color=C["border"])
-        card.pack(fill="x", padx=40, pady=(20, 0))
+        enable_universal_mousewheel(self)
+        card = ctk.CTkScrollableFrame(self, fg_color=C["bg_card"], corner_radius=10,
+                                      border_width=1, border_color=C["border"], scrollbar_button_color=C["bg_card_alt"])
+        card.pack(fill="both", expand=True, padx=40, pady=(20, 20))
 
         # Token field
         ctk.CTkLabel(card, text="Bot Token", font=font_bold(12),
@@ -764,30 +806,7 @@ class SettingsPanel(ctk.CTkToplevel):
         scroll = ctk.CTkScrollableFrame(self, fg_color=C["bg"],
                                          scrollbar_button_color=C["bg_card"])
         scroll.pack(fill="both", expand=True, padx=20, pady=(10, 0))
-
-        # Fix Linux/X11 & Windows mousewheel scrolling across all child widgets
-        def _on_mousewheel(event):
-            try:
-                if event.num == 4 or getattr(event, "delta", 0) > 0:
-                    scroll._parent_canvas.yview_scroll(-1, "units")
-                elif event.num == 5 or getattr(event, "delta", 0) < 0:
-                    scroll._parent_canvas.yview_scroll(1, "units")
-            except Exception:
-                pass
-
-        self.bind_all("<Button-4>", _on_mousewheel, add="+")
-        self.bind_all("<Button-5>", _on_mousewheel, add="+")
-        self.bind_all("<MouseWheel>", _on_mousewheel, add="+")
-
-        def _cleanup_binds(event):
-            if event.widget == self:
-                try:
-                    self.unbind_all("<Button-4>")
-                    self.unbind_all("<Button-5>")
-                    self.unbind_all("<MouseWheel>")
-                except Exception:
-                    pass
-        self.bind("<Destroy>", _cleanup_binds)
+        enable_universal_mousewheel(self)
 
         # ── Alert Thresholds ──
         self._section(scroll, "Alert Thresholds")
@@ -1400,8 +1419,9 @@ class BatteryGuardApp(ctk.CTk):
         ctk.CTkFrame(self, height=1, fg_color=C["border"], corner_radius=0).pack(fill="x")
 
         # ── Main content area ──
-        main = ctk.CTkFrame(self, fg_color="transparent")
+        main = ctk.CTkScrollableFrame(self, fg_color="transparent", scrollbar_button_color=C["bg_card"])
         main.pack(fill="both", expand=True, padx=24, pady=16)
+        enable_universal_mousewheel(self)
 
         # ── Smart Alerts Toggle Banner ──
         sa_card = ctk.CTkFrame(main, fg_color=C["bg_card"], corner_radius=10,
@@ -1852,8 +1872,8 @@ class BatteryGuardApp(ctk.CTk):
         ctk.CTkFrame(win, height=3, fg_color=C["blue"], corner_radius=0).pack(fill="x")
         ctk.CTkLabel(win, text="Battery Diagnostics", font=font_bold(16), text_color=C["text"]).pack(pady=(16, 10))
 
-        diag = get_battery_diagnostics()
-        card = ctk.CTkFrame(win, fg_color=C["bg_card"], corner_radius=10, border_width=1, border_color=C["border"])
+        enable_universal_mousewheel(win)
+        card = ctk.CTkScrollableFrame(win, fg_color=C["bg_card"], corner_radius=10, border_width=1, border_color=C["border"], scrollbar_button_color=C["bg_card_alt"])
         card.pack(fill="both", expand=True, padx=20, pady=6)
 
         def add_row(k, v):
