@@ -1871,6 +1871,7 @@ class BatteryGuardApp(ctk.CTk):
         ctk.CTkFrame(win, height=3, fg_color=C["blue"], corner_radius=0).pack(fill="x")
         ctk.CTkLabel(win, text="Battery Diagnostics", font=font_bold(16), text_color=C["text"]).pack(pady=(16, 10))
 
+        diag = get_battery_diagnostics()
         enable_universal_mousewheel(win)
         card = ctk.CTkScrollableFrame(win, fg_color=C["bg_card"], corner_radius=10, border_width=1, border_color=C["border"], scrollbar_button_color=C["bg_card_alt"])
         card.pack(fill="both", expand=True, padx=20, pady=6)
