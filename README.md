@@ -9,18 +9,21 @@ Modern laptop batteries and UPS systems degrade prematurely due to chronic overc
 ## Key Capabilities
 
 - **Hardware Telemetry & Thermal Monitoring:** Real-time tracking of battery health degradation percentage, cycle counts, voltage, design vs. actual Wh capacity, and ACPI motherboard/CPU thermal sensors (`/sys/class/thermal/`).
+- **Hardware Kernel Charging Cutoff (`charge_control_end_threshold`):** Direct write integration with `/sys/class/power_supply/BAT*/charge_control_end_threshold` to physically stop battery charging at upper limits for supported Linux kernel modules (HP, Lenovo, ASUS, Dell) without requiring manual AC adapter unplugging.
+- **Historical Time-to-Target & Prediction Engine:** Built-in time-series predictor analyzing average charge and discharge curves to calculate exact completion time estimates (`Time to Target: Xm (around HH:MM AM/PM)`) based on historical usage patterns.
 - **Multi-Channel Alert Dispatcher:** Edge-triggered notification pipeline supporting desktop popups (`plyer`), webhook endpoints (Slack, Microsoft Teams, Discord), WhatsApp messaging (multi-recipient support), Telegram bots, and ntfy push alerts. Includes built-in hysteresis and anti-flap filtering.
 - **Automated Linux Power Management:** Dynamic OS power profile switching via `powerprofilesctl` (automatically enforcing `power-saver` mode at low thresholds and restoring `balanced` upon charging) and automated sleep/suspend safeguards at critical limits.
+- **Universal Smart Scrolling & UI Hardening:** Cross-platform (Linux X11/Wayland, Windows, macOS) window-wide mousewheel scrolling (`enable_universal_mousewheel`) across all dashboards, settings panels, and analytics modals, equipped with automatic circular gauge protection (`_is_gauge_canvas`) to prevent canvas distortion.
 - **Compliance Audit Logging & Reporting:** Immutable JSON-lines event logging (`~/.battery_guard/audit.jsonl`) and one-click CSV spreadsheet report generation for hardware asset tracking and warranty compliance (SOC 2 / ISO 27001 ready).
 - **Audible Alert Synthesis:** Native text-to-speech warnings via Ubuntu Speech Dispatcher (`spd-say`) or Windows SAPI.
 - **Headless Daemon Execution:** Command-line support (`--daemon`) for remote Linux servers, workstations, and UPS monitoring without a graphical user interface.
-- **System Tray & Window Management:** Persistent desktop integration with Ubuntu AppIndicator left-click menu support and Wayland/GNOME foreground window restoration.
+- **System Tray & Window Management:** Persistent desktop integration with Ubuntu AppIndicator left-click menu support (`pystray` + `Pillow`) and Wayland/GNOME foreground window restoration.
 
 ## System Architecture
 
-Battery Guard operates as a background polling engine with decoupled UI and alerting layers:
-- `battery_guard.py`: Core application controller, Tkinter/CustomTkinter dashboard, system tray manager, and OS power state automation.
-- `smart_alerts.py`: Standalone notification dispatcher handling network requests, cooldown timers, quiet hours filtering, and webhook payloads.
+Battery Guard operates as a background polling engine with decoupled UI, predictive analysis, and alerting layers:
+- `battery_guard.py`: Core application controller, Tkinter/CustomTkinter dashboard, universal mousewheel engine, predictive time estimator, hardware kernel cutoff (`apply_hardware_charging_threshold`), system tray manager, and OS power state automation.
+- `smart_alerts.py`: Standalone notification dispatcher handling network requests, cooldown timers, quiet hours filtering, WhatsApp/Telegram/ntfy dispatching, and webhook payloads.
 
 ## System Requirements
 
@@ -155,4 +158,4 @@ python3 battery_guard.py
 
 ## License
 
-This project is open-source software. Add an appropriate license file (e.g., MIT, Apache 2.0, or GPLv3) before public distribution.
+This project is licensed under the **MIT License** — see the [LICENSE](LICENSE) file for details. Copyright (c) 2026 Kevin Bastin.
